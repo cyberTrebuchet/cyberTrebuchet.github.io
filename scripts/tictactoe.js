@@ -44,73 +44,111 @@ var Game = function Game(){
     "se": true
   }]
 
-  this.checkForWin = function checkForWin(player){
-    var gameWon = false;
-    return newGame.forTheWin.some(function(winSet){
-      for (boxID in winSet){
-        gameWon = winSet[boxID] === player ? true : false;
+  this.checkForTie = function checkForTie(){
+    console.log("Checking for tie...")
+    return newGame.boxes.every(   function(row){
+      console.log("In the row...")
+      return row.every(          function(boxID){
+        console.log($("#" + boxID).hasClass("clicked"));
+        return $("#" + boxID).hasClass("clicked");
+      });
+    });
+  }
+
+  this.checkForWin = function checkForWin(player, currentBoxID){
+    var $currentBoxID = currentBoxID;
+
+    // Note player move in array of "wins"
+    newGame.forTheWin.forEach(function(winSet){
+      if (winSet[$currentBoxID.slice(1)]){
+        winSet[$currentBoxID.slice(1)] = player;
       }
-      return gameWon;
+    });
+
+    if (newGame.checkForTie()){
+      newGame.dimmer("Tie!");
+      return false;
+    }
+
+    return newGame.forTheWin.some(function(winSet){
+      
+      var inARow = 0;
+
+      console.log(Object.keys(winSet));
+
+      if (Object.keys(winSet).every(function(boxID){
+        console.log(boxID + " is " + winSet[boxID]);
+        return winSet[boxID] === player;
+      })){
+        console.log("Game won? True! by " + player);
+        return true;
+      } else {
+        console.log("Game won? False! by " + player);
+        return false;
+      }
     });
   }
 
   this.playerMove = function playerMove(clickEvent){
 
-    console.log(clickEvent.target + " is the click event target");
-    console.log(clickEvent.target.id + " is the target's id");
+    // console.log(clickEvent.target + " is the click event target");
+    // console.log(clickEvent.target.id + " is the target's id");
 
     var $currentPlayer = $("#whose-turn").text().toLowerCase(); // Whose turn is it, anyway?
     var $currentBoxID = "#" + clickEvent.target.id; // Will be image, after image is shown
 
-    console.log($currentPlayer + " is currentPlayer");
-    console.log($currentBoxID + " is currentBox's id");
+    // console.log($currentPlayer + " is currentPlayer");
+    // console.log($currentBoxID + " is currentBox's id");
 
     // Modify the box only if unclicked
     if (!($($currentBoxID).hasClass("clicked"))) {
+
+      // To prevent this.playerMove() from being called again in the same box
+      $($currentBoxID).addClass("clicked");
+      $($currentBoxID).children().addClass("clicked");
 
       // Check whose turn it is
       if ($currentPlayer.includes("x")){             // If X's turn...
 
         // Show only the correct graphic on the clicked box
         $($currentBoxID + " > #x-pic").show();
+
+        // Play audio
+        $("#fire").trigger("pause");
+        $("#fire").prop("currentTime", 0);
+        $("#fire").trigger("play");
         
         // Briefly show the big player graphic
         $("#big-x").show();
         $("#big-x").fadeOut(1000);
 
-        // Note player move in array of "wins"
-        newGame.forTheWin.forEach(function(winSet){
-          if (winSet[$currentBoxID.slice(1)]){ // Slice the #
-            winSet[$currentBoxID.slice(1)] = "x";
-          }
-        });
         // Check for the win!
-        if (newGame.checkForWin("x")){
-          newGame.dimmer();
+        if (newGame.checkForWin("x", $currentBoxID)){
+          newGame.dimmer("x");
         }
         // Toggle currentPlayer
         $("#whose-turn").text("Player O - go!");
 
       } else {                                       // If O's turn...
+        // Show only the correct graphic on the clicked box
         $($currentBoxID + " > #o-pic").show();
+
+        // Play audio
+        $("#fire").trigger("pause");
+        $("#fire").prop("currentTime", 0);
+        $("#fire").trigger("play");
         
+        // Briefly show the big player graphic
         $("#big-o").show();
         $("#big-o").fadeOut(1000);
-
-        newGame.forTheWin.forEach(function(winSet){
-          if (winSet[$currentBoxID.slice(1)]){
-            winSet[$currentBoxID.slice(1)] = "o";
-          }
-        });
-        if (newGame.checkForWin("o")){
-          newGame.dimmer();
+        
+        // Check for the win!
+        if (newGame.checkForWin("o", $currentBoxID)){
+          newGame.dimmer("o");
         }
+        // Toggle currentPlayer
         $("#whose-turn").text("Player X - go!");
       }
-
-      // To prevent this.playerMove() from being called again in the same box
-      $($currentBoxID).addClass("clicked");
-      $($currentBoxID).children().addClass("clicked");
     }
   }
 
@@ -177,26 +215,34 @@ var Game = function Game(){
     console.log("The grid is up!");
   }
 
-  // When game is won, display congratulations and offer to start new game
-  this.dimmer = function dimmer(){
-    
+  // Display congratulations and offer to start new game
+  this.dimmer = function dimmer(player){
+    // Clear any previous gratz
+    $("#dimmer > h1").remove();
+
+    var $gratz = $("<h1>");
+
+    if (player != "Tie!"){
+      // Up the appropriate player's score
+      var $score = $("." + player + "-score > h2");
+      $score.text(parseInt($score.text()) + 1);
+      
+      $gratz.text("Congratulations, Player " + player.toUpperCase());
+    } else {
+      $gratz.text("Congratulations, Player " + player);      
+    }
+
+    $("#dimmer").prepend($gratz);
+    $("#dimmer").show();
   }
 }
-
-// Load the landing page
-
-var $landingPage = $("<div>").addClass("row").append($("<div>").addClass("half column"));
-var $invite = $("<button>").addClass("button-primary").text("New Game...");
-
-$landingPage.append($invite);
-
-$(".container").append($landingPage);
 
 // Declared newGame outside the first click event because "this" was being a pain
 var newGame;
 
 // Inititalize and render a new game when button clicked
 $(".button-primary").click(function(){
+  $("#dimmer").hide();
   newGame = new Game();
   newGame.render();
 });

@@ -6,12 +6,31 @@
   <link rel="stylesheet" href="stylesheets/normalize.css">
   <link rel="stylesheet" href="stylesheets/skeleton.css">
   <link rel="stylesheet" href="stylesheets/style.css">
+  <audio id="fire" src="audio/fire.mp3" preload="auto"></audio>
 </head>
 <body>
   <header>
     <h1>PLAY TIC TAC TOE NOW</h1>
   </header>
+
+  <div id="dimmer">
+    <button class="button-primary">Play again?</button>
+    <div class="scoreboard x-score">
+      <h2>0</h2>
+      <img src="graphics/burning-x.png" />
+    </div>
+    <div class="scoreboard o-score">
+      <h2>0</h2>
+      <img src="graphics/burning-o.png" />
+    </div>
+  </div>
+
   <div class="container">
+    <div class="row">
+      <div class="half column">
+        <button class="button-primary">New Game...</button>
+      </div>
+    </div>
   </div>
 </body>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
