@@ -1,6 +1,6 @@
 ###### cyberTrebuchet.github.io
 # tic tac toe
-A new interpretation of the timeless classic 
+A bombastic implementation of a timeless classic 
 
 ### Background
 
